@@ -73,3 +73,119 @@ class Alien:
 
     def shift_down(self):
         self.y += self.d
+
+def saved():
+    font = pygame.font.SysFont("Wide Latin", 22)
+    font_large = pygame.font.SysFont("Wide Latin", 43)
+    text2 = font_large.render("Congratulations!", True, white1)
+    text = font.render("You Prevented the Alien Invasion!", True, white1)
+    display.blit(text2, (60, height/2))
+    display.blit(text, (45, height/2 + 100))
+    pygame.display.update()
+    time.sleep(3)
+
+def GameOver():
+    font = pygame.font.SysFont("Chiller", 50)
+    font_large = pygame.font.SysFont("Chiller", 100)
+    text2 = font_large.render("Game Over!", True, white1)
+    text = font.render("You Could not Prevent the Alien Invasion!", True, white1)
+    display.blit(text2, (180, height/2-50))
+    display.blit(text, (45, height/2 + 100))
+
+def game():
+    invasion = False
+    ship = SpaceShip(width/2-ship_width/2, height-ship_height - 10, ship_width, ship_height, white)
+
+    bullets = []
+    num_bullet = 0
+    for i in range(num_bullet):
+        i = Bullet(width/2 - 5, height - ship_height - 20)
+        bullets.append(i)
+
+    x_move = 0
+
+    aliens = []
+    num_aliens = 8
+    d = 50
+    for i in range(num_aliens):
+        i = Alien((i+1)*d + i*20, d+20, d)
+        aliens.append(i)
+
+    while not invasion:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.key == pygame.K_RIGHT:
+                    x_move = 5
+
+                if event.key == pygame.K_LEFT:
+                    x_move = -5
+
+                if event.key == pygame.K_SPACE:
+                    num_bullet += 1
+                    i = Bullet(ship.x + ship_width/2 - 5, ship.y)
+                    bullets.append(i)
+
+            if event.type == pygame.KEYUP:
+                x_move = 0
+
+        display.fill(background)
+
+        for i in range(num_bullet):
+            bullets[i].draw()
+            bullets[i].move()
+
+        for alien in list(aliens):
+            alien.draw()
+            alien.move()
+            for item in list(bullets):
+                if item.hit(alien.x, alien.y, alien.d):
+                    bullets.remove(item)
+                    num_bullet -= 1
+                    aliens.remove(alien)
+                    num_aliens -= 1
+
+        if num_aliens == 0:
+            saved()
+            invasion = True
+
+        for i in range(num_aliens):
+            if aliens[i].x + d >= width:
+                for j in range(num_aliens):
+                    aliens[j].x_dir = -1
+                    aliens[j].shift_down()
+
+            if aliens[i].x <= 0:
+                for j in range(num_aliens):
+                    aliens[j].x_dir = 1
+                    aliens[j].shift_down()
+
+        try:
+            if aliens[0].y + d > height:
+                GameOver()
+                pygame.display.update()
+                time.sleep(3)
+                invasion = True
+        except Exception as e:
+            pass
+
+        ship.x += x_move
+
+        if ship.x < 0:
+            ship.x -= x_move
+        if ship.x + ship_width > width:
+            ship.x -= x_move
+
+        ship.draw()
+
+        pygame.display.update()
+        clock.tick(60)
+
+game()
